@@ -17,7 +17,7 @@ inputs:
     default: module
     required: false
   workspace:
-    description: The directory where the terraform workspace has been created
+    description: The directory where the terraform workspace should be created
     default: /tmp/workspace
     required: false
   configBaseUrl:
