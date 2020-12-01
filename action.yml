@@ -21,10 +21,10 @@ inputs:
     required: false
   configBaseUrl:
     description: The base url where the terraform.tfvars file can be found for the clusterId. Expected to resolve to {configBaseUrl}/{clusterId}/terraform.tfvars
-    default: ""
+    default: "https://raw.githubusercontent.com/ibm-garage-cloud/action-module-verify/main/env"
     required: false
 runs:
-  using: composite
+  using: "composite"
   steps:
     - name: Setup ${{ inputs.clusterId }} terraform.tfvars
       id: setup-terraform
@@ -33,9 +33,11 @@ runs:
         cp -R ${{ inputs.testStagesDir }}/* ${{ inputs.workspace }}
         cp -R . ${{ inputs.workspace }}/${{ inputs.testModuleDir }}
 
+        NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-[^-]+-/tools-/g")
+
         cd ${{ inputs.workspace }}
         curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
-        NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-[^-]+-/tools-/g")
+        echo "ibmcloud_api_key=${{ inputs.ibmcloudApiKey }}" >> terraform.tfvars
         echo "tools_namespace=${NAMESPACE}" >> terraform.tfvars
         echo "::set-output name=namespace::$NAMESPACE"
 
@@ -44,24 +46,18 @@ runs:
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/apply.sh
-      env:
-        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
 
     # Test deploy
     - name: Validate deploy ${{ inputs.clusterId }}
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }}
-      env:
-        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
 
     # Destroy
     - name: Destroy ${{ inputs.clusterId }}
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/destroy.sh
-      env:
-        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
 
     # Test destroy
     - name: Validate destroy ${{ inputs.clusterId }}
@@ -75,5 +71,3 @@ runs:
           diff $PWD/cluster-state/before $PWD/cluster-state/after
           exit 1
         fi
-      env:
-        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
