@@ -38,7 +38,6 @@ runs:
 
         cd ${{ inputs.workspace }}
         curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
-        echo "ibmcloud_api_key=\"${{ inputs.ibmcloudApiKey }}\"" >> terraform.tfvars
         echo "tools_namespace=\"${NAMESPACE}\"" >> terraform.tfvars
         echo "::set-output name=namespace::$NAMESPACE"
 
@@ -48,6 +47,8 @@ runs:
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/apply.sh
+      env:
+        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
 
     # Test deploy
     - name: Validate deploy ${{ inputs.clusterId }}
@@ -62,6 +63,8 @@ runs:
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/destroy.sh
+      env:
+        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
 
     # Test destroy
     - name: Validate destroy ${{ inputs.clusterId }}
