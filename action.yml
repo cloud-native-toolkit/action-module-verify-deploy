@@ -38,8 +38,8 @@ runs:
 
         cd ${{ inputs.workspace }}
         curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
-        echo "ibmcloud_api_key=${{ inputs.ibmcloudApiKey }}" >> terraform.tfvars
-        echo "tools_namespace=${NAMESPACE}" >> terraform.tfvars
+        echo "ibmcloud_api_key=\"${{ inputs.ibmcloudApiKey }}\"" >> terraform.tfvars
+        echo "tools_namespace=\"${NAMESPACE}\"" >> terraform.tfvars
         echo "::set-output name=namespace::$NAMESPACE"
 
     # Deploy
