@@ -28,6 +28,7 @@ runs:
   steps:
     - name: Setup ${{ inputs.clusterId }} terraform.tfvars
       id: setup-terraform
+      shell: bash
       run: |
         mkdir -p ${{ inputs.workspace }}/${{ inputs.testModuleDir }}
         cp -R ${{ inputs.testStagesDir }}/* ${{ inputs.workspace }}
@@ -43,24 +44,28 @@ runs:
 
     # Deploy
     - name: Deploy ${{ inputs.clusterId }}
+      shell: bash
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/apply.sh
 
     # Test deploy
     - name: Validate deploy ${{ inputs.clusterId }}
+      shell: bash
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }}
 
     # Destroy
     - name: Destroy ${{ inputs.clusterId }}
+      shell: bash
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/destroy.sh
 
     # Test destroy
     - name: Validate destroy ${{ inputs.clusterId }}
+      shell: bash
       run: |
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/capture-cluster-state.sh ${{ inputs.clusterId }} $PWD/cluster-state/before $PWD/cluster-state/after
