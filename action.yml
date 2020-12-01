@@ -44,7 +44,7 @@ runs:
         echo "++ Retrieving terraform.tfvars from ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars"
 
         curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
-        echo "tools_namespace=\"${NAMESPACE}\"" >> terraform.tfvars
+        echo "namespace=\"${NAMESPACE}\"" >> terraform.tfvars
 
         echo "++ terraform.tfvars"
         cat terraform.tfvars
