@@ -1,0 +1,79 @@
+name: Verify terraform module
+description: "GitHub Action to run through the lifecycle for a terraform module: deploy, verify deploy, destroy, and verify destroy"
+inputs:
+  clusterId:
+    description: The identifier of the cluster onto which the module should be deployed
+    required: true
+  ibmcloudApiKey:
+    description: The API Key to access the IBM Cloud account
+    required: true
+  testStagesDir:
+    description: The directory where the test stages are located
+    default: test/stages
+    required: false
+  testModuleDir:
+    description: The directory where the current module will be copied
+    default: module
+    required: false
+  workspace:
+    description: The directory where the terraform workspace has been created
+    default: /tmp/workspace
+    required: false
+  configBaseUrl:
+    description: The base url where the terraform.tfvars file can be found for the clusterId. Expected to resolve to {configBaseUrl}/{clusterId}/terraform.tfvars
+    default: ""
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: Setup ${{ inputs.clusterId }} terraform.tfvars
+      id: setup-terraform
+      run: |
+        mkdir -p ${{ inputs.workspace }}/${{ inputs.testModuleDir }}
+        cp -R ${{ inputs.testStagesDir }}/* ${{ inputs.workspace }}
+        cp -R . ${{ inputs.workspace }}/${{ inputs.testModuleDir }}
+
+        cd ${{ inputs.workspace }}
+        curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
+        NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-[^-]+-/tools-/g")
+        echo "tools_namespace=${NAMESPACE}" >> terraform.tfvars
+        echo "::set-output name=namespace::$NAMESPACE"
+
+    # Deploy
+    - name: Deploy ${{ inputs.clusterId }}
+      run: |
+        cd ${{ inputs.workspace }}
+        $GITHUB_ACTION_PATH/scripts/apply.sh
+      env:
+        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
+
+    # Test deploy
+    - name: Validate deploy ${{ inputs.clusterId }}
+      run: |
+        cd ${{ inputs.workspace }}
+        $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }}
+      env:
+        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
+
+    # Destroy
+    - name: Destroy ${{ inputs.clusterId }}
+      run: |
+        cd ${{ inputs.workspace }}
+        $GITHUB_ACTION_PATH/scripts/destroy.sh
+      env:
+        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
+
+    # Test destroy
+    - name: Validate destroy ${{ inputs.clusterId }}
+      run: |
+        cd ${{ inputs.workspace }}
+        $GITHUB_ACTION_PATH/scripts/capture-cluster-state.sh ${{ inputs.clusterId }} $PWD/cluster-state/before $PWD/cluster-state/after
+        if diff -q $PWD/cluster-state/before $PWD/cluster-state/after 1> /dev/null; then
+          echo "Destroy completed successfully"
+        else
+          echo "Resources don't match"
+          diff $PWD/cluster-state/before $PWD/cluster-state/after
+          exit 1
+        fi
+      env:
+        TF_VAR_ibmcloud_api_key: ${{ inputs.ibmcloudApiKey }}
