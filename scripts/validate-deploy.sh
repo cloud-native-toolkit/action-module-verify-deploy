@@ -7,6 +7,7 @@ export KUBECONFIG="${PWD}/.kube/config"
 CLUSTER_TYPE="$1"
 NAMESPACE="$2"
 NAME="$3"
+VALIDATE_DEPLOY_SCRIPT="$4"
 
 if [[ -z "${NAME}" ]]; then
   NAME=$(echo "${NAMESPACE}" | sed "s/tools-//")
@@ -23,50 +24,30 @@ fi
 
 set -e
 
-#if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" =~ iks.* ]]; then
-#  ENDPOINTS=$(kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{"https://"}{.host}{"\n"}{end}{end}')
-#else
-#  ENDPOINTS=$(kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{"https://"}{.spec.host}{.spec.path}{"\n"}{end}')
-#fi
-#
-#echo "Validating endpoints:"
-#echo "${ENDPOINTS}"
-#
-#echo "${ENDPOINTS}" | while read endpoint; do
-#  if [[ -n "${endpoint}" ]]; then
-#    ${SCRIPT_DIR}/waitForEndpoint.sh "${endpoint}" 10 10
-#  fi
-#done
-
-INTERNAL_URL=$(kubectl get secret artifactory-access -n "${NAMESPACE}" -o jsonpath='{.data.ARTIFACTORY_URL}' | base64 -d)
-
-SERVICE_URL="http://artifactory-artifactory.${NAMESPACE}"
-if [[ "${INTERNAL_URL}" =~ ${SERVICE_URL} ]]; then
-  echo "Internal url found"
+if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" =~ iks.* ]]; then
+  ENDPOINTS=$(kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{"https://"}{.host}{"\n"}{end}{end}')
 else
-  echo "Internal url not found"
-  exit 1
+  ENDPOINTS=$(kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{"https://"}{.spec.host}{.spec.path}{"\n"}{end}')
 fi
 
-CONFIG_URLS=$(kubectl get configmap -n "${NAMESPACE}" -l grouping=garage-cloud-native-toolkit -l app.kubernetes.io/component=tools -o json | jq '.items[].data | to_entries | select(.[].key | endswith("_URL")) | .[].value' | sed "s/\"//g")
+echo "Validating endpoints:"
+echo "${ENDPOINTS}"
 
-echo "${CONFIG_URLS}" | while read url; do
-  if [[ -n "${url}" ]]; then
-    ${SCRIPT_DIR}/waitForEndpoint.sh "${url}" 10 10
+echo "${ENDPOINTS}" | while read endpoint; do
+  if [[ -n "${endpoint}" ]]; then
+    ${SCRIPT_DIR}/waitForEndpoint.sh "${endpoint}" 10 10
   fi
 done
 
-ENCRYPT=$(kubectl get secret artifactory-access -n "${NAMESPACE}" -o jsonpath='{.data.ARTIFACTORY_ENCRYPT}')
-if [[ -z "${ENCRYPT}" ]]; then
-  echo "ENCRPYT password not set"
-  exit 1
-fi
-
-if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
-  echo "Validating consolelink"
-  if [[ $(kubectl get consolelink "toolkit-${NAME}" | wc -l) -eq 0 ]]; then
-    echo "   ConsoleLink not found"
-    exit 1
+if [[ -f "${VALIDATE_DEPLOY_SCRIPT}" ]]; then
+  ${VALIDATE_DEPLOY_SCRIPT} "${CLUSTER_TYPE}" "${NAMESPACE}" "${NAME}"
+else
+  if [[ "${CLUSTER_TYPE}" =~ ocp4 ]]; then
+    echo "Validating consolelink"
+    if [[ $(kubectl get consolelink "toolkit-${NAME}" | wc -l) -eq 0 ]]; then
+      echo "   ConsoleLink not found"
+      exit 1
+    fi
   fi
 fi
 
