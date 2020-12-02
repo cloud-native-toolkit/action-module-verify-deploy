@@ -57,6 +57,11 @@ runs:
       run: |
         echo "*** Deploy ${{ inputs.clusterId }} ***"
 
+        if [[ -f .env ]]; then
+          echo "++ Loading config from .env file"
+          source .env
+        fi
+
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/apply.sh
 
@@ -65,6 +70,11 @@ runs:
       shell: bash
       run: |
         echo "*** Validate deploy ${{ inputs.clusterId }} ***"
+
+        if [[ -f .env ]]; then
+          echo "++ Loading config from .env file"
+          source .env
+        fi
 
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }} ${CONSOLE_LINK_NAME} ${{ inputs.validateDeployScript }}
@@ -75,6 +85,11 @@ runs:
       run: |
         echo "*** Destroy ${{ inputs.clusterId }} ***"
 
+        if [[ -f .env ]]; then
+          echo "++ Loading config from .env file"
+          source .env
+        fi
+
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/destroy.sh
 
@@ -83,6 +98,11 @@ runs:
       shell: bash
       run: |
         echo "*** Validate destroy ${{ inputs.clusterId }} ***"
+
+        if [[ -f .env ]]; then
+          echo "++ Loading config from .env file"
+          source .env
+        fi
 
         cd ${{ inputs.workspace }}
         $GITHUB_ACTION_PATH/scripts/capture-cluster-state.sh ${{ inputs.clusterId }} $PWD/cluster-state/before $PWD/cluster-state/after
