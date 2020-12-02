@@ -24,9 +24,6 @@ inputs:
     description: The base url where the terraform.tfvars file can be found for the clusterId. Expected to resolve to {configBaseUrl}/{clusterId}/terraform.tfvars
     default: "https://raw.githubusercontent.com/ibm-garage-cloud/action-module-verify/main/env"
     required: false
-  consoleLinkName:
-    description: The name of the console link that will be created
-    required: true
 runs:
   using: "composite"
   steps:
@@ -70,7 +67,7 @@ runs:
         echo "*** Validate deploy ${{ inputs.clusterId }} ***"
 
         cd ${{ inputs.workspace }}
-        $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }} ${{ inputs.consoleLinkName }} ${{ inputs.validateDeployScript }}
+        $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }} ${CONSOLE_LINK_NAME} ${{ inputs.validateDeployScript }}
 
     # Destroy
     - name: Destroy ${{ inputs.clusterId }}

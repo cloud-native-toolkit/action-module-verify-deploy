@@ -35,9 +35,15 @@ the module in the Git repo should refer to this directory, e.g. `source = "./mod
 
 ***Optional** The directory where the terraform workspace should be created. Defaults to `/tmp/workspace`.
 
-### `consoleLinkName`
+## Environment variables
 
-**Required** The name of the console link resource that should be created by the module
+### `TF_VAR_*`
+
+**Optional** Any variable needed by the the terraform scripts can be provided as an environment variable by adding the prefix `TF_VAR_`
+
+### `CONSOLE_LINK_NAME`
+
+**Optional** The name of the console link resource that should be created by the module. If not provided the console link name is derived from the component name
 
 ## Example usage
 
