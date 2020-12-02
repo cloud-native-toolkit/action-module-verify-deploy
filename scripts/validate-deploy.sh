@@ -6,7 +6,7 @@ export KUBECONFIG="${PWD}/.kube/config"
 
 CLUSTER_TYPE="$1"
 NAMESPACE="$2"
-NAME="$3"
+CONSOLE_LINK_NAME="$3"
 VALIDATE_DEPLOY_SCRIPT="$4"
 
 if [[ -z "${NAME}" ]]; then
@@ -43,8 +43,12 @@ if [[ -f "${VALIDATE_DEPLOY_SCRIPT}" ]]; then
   ${VALIDATE_DEPLOY_SCRIPT} "${CLUSTER_TYPE}" "${NAMESPACE}" "${NAME}"
 else
   if [[ "${CLUSTER_TYPE}" =~ ocp4 ]]; then
+    if [[ -z "${CONSOLE_LINK_NAME}" ]]; then
+      CONSOLE_LINK_NAME=toolkit-${NAME}"
+    fi
+
     echo "Validating consolelink"
-    if [[ $(kubectl get consolelink "toolkit-${NAME}" | wc -l) -eq 0 ]]; then
+    if [[ $(kubectl get consolelink "${CONSOLE_LINK_NAME}" | wc -l) -eq 0 ]]; then
       echo "   ConsoleLink not found"
       exit 1
     fi
