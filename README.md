@@ -41,9 +41,13 @@ the module in the Git repo should refer to this directory, e.g. `source = "./mod
 
 **Optional** Any variable needed by the the terraform scripts can be provided as an environment variable by adding the prefix `TF_VAR_`
 
-### `CONSOLE_LINK_NAME`
+### Additional environment variables
 
-**Optional** The name of the console link resource that should be created by the module. If not provided the console link name is derived from the component name
+Additional environment variables can be provided to the terraform modules and verification scripts by providing them in a `.env` file 
+in the root of the repository. Some variables that can be provided to the verification scripts are:
+
+- `CONSOLE_LINK_NAME` - the name of the ConsoleLink resource that will be created on OpenShift 4.x clusters. If not provided then the validation logic will
+not check for the existence of a ConsoleLink
 
 ## Example usage
 
