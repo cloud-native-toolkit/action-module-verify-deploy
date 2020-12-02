@@ -42,11 +42,7 @@ done
 if [[ -f "${VALIDATE_DEPLOY_SCRIPT}" ]]; then
   ${VALIDATE_DEPLOY_SCRIPT} "${CLUSTER_TYPE}" "${NAMESPACE}" "${NAME}"
 else
-  if [[ "${CLUSTER_TYPE}" =~ ocp4 ]]; then
-    if [[ -z "${CONSOLE_LINK_NAME}" ]]; then
-      CONSOLE_LINK_NAME="toolkit-${NAME}"
-    fi
-
+  if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
     echo "Validating consolelink"
     if [[ $(kubectl get consolelink "${CONSOLE_LINK_NAME}" | wc -l) -eq 0 ]]; then
       echo "   ConsoleLink not found"
