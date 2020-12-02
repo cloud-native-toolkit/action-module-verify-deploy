@@ -44,7 +44,7 @@ if [[ -f "${VALIDATE_DEPLOY_SCRIPT}" ]]; then
 else
   if [[ "${CLUSTER_TYPE}" =~ ocp4 ]]; then
     if [[ -z "${CONSOLE_LINK_NAME}" ]]; then
-      CONSOLE_LINK_NAME=toolkit-${NAME}"
+      CONSOLE_LINK_NAME="toolkit-${NAME}"
     fi
 
     echo "Validating consolelink"
