@@ -37,7 +37,7 @@ runs:
         cp -R ${{ inputs.testStagesDir }}/* ${{ inputs.workspace }}
         cp -R . ${{ inputs.workspace }}/${{ inputs.testModuleDir }}
 
-        NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-[^-]+-/tools-/g")
+        NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-//g")
 
         cd ${{ inputs.workspace }}
 
