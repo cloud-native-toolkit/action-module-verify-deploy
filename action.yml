@@ -107,11 +107,17 @@ runs:
         fi
 
         cd ${{ inputs.workspace }}
-        $GITHUB_ACTION_PATH/scripts/capture-cluster-state.sh ${{ inputs.clusterId }} $PWD/cluster-state/before $PWD/cluster-state/after
-        if diff -q $PWD/cluster-state/before $PWD/cluster-state/after 1> /dev/null; then
-          echo "++ Destroy completed successfully"
+
+        if [[ -d $PWD/cluster-state/before ]]; then
+          echo "  --- Comparing custer state before and after apply/destroy"
+          $GITHUB_ACTION_PATH/scripts/capture-cluster-state.sh ${{ inputs.clusterId }} $PWD/cluster-state/before $PWD/cluster-state/after
+          if diff -q $PWD/cluster-state/before $PWD/cluster-state/after 1> /dev/null; then
+            echo "++ Destroy completed successfully"
+          else
+            echo "++ Resources don't match"
+            diff $PWD/cluster-state/before $PWD/cluster-state/after
+            exit 1
+          fi
         else
-          echo "++ Resources don't match"
-          diff $PWD/cluster-state/before $PWD/cluster-state/after
-          exit 1
+          echo "Cluster-state not captured. Nothing to do, for now..."
         fi
