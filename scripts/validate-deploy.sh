@@ -15,7 +15,7 @@ fi
 
 echo "Verifying resources in ${NAMESPACE} namespace for module ${NAME}"
 
-if [[ -f "${VALIDATE_DEPLOY_SCRIPT}" ]]; then
+if [[ -n "${VALIDATE_DEPLOY_SCRIPT}" ]] && [[ -f "${VALIDATE_DEPLOY_SCRIPT}" ]]; then
   ${VALIDATE_DEPLOY_SCRIPT} "${CLUSTER_TYPE}" "${NAMESPACE}" "${NAME}" "${CONSOLE_LINK_NAME}"
 else
   PODS=$(kubectl get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{": "}{.kind}{"/"}{.metadata.name}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded")
