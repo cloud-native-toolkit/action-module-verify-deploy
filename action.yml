@@ -77,7 +77,7 @@ runs:
         fi
 
         cd ${{ inputs.workspace }}
-        $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }} "${CONSOLE_LINK_NAME}" "${{ inputs.validateDeployScript }}"
+        $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }} "${CONSOLE_LINK_NAME}" "$PWD/${{ inputs.validateDeployScript }}"
 
     # Destroy
     - name: Destroy ${{ inputs.clusterId }}
