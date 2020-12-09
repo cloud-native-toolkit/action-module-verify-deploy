@@ -16,8 +16,14 @@ fi
 echo "Verifying resources in ${NAMESPACE} namespace for module ${NAME}"
 
 if [[ -n "${VALIDATE_DEPLOY_SCRIPT}" ]] && [[ -f "${VALIDATE_DEPLOY_SCRIPT}" ]]; then
+  echo "VALIDATE_DEPLOY_SCRIPT provided. Delegating validation logic to ${VALIDATE_DEPLOY_SCRIPT}"
+  echo ""
+
   ${VALIDATE_DEPLOY_SCRIPT} "${CLUSTER_TYPE}" "${NAMESPACE}" "${NAME}" "${CONSOLE_LINK_NAME}"
 else
+  echo "No VALIDATE_DEPLOY_SCRIPT provided or script not found. Using default validation. (${VALIDATE_DEPLOY_SCRIPT})"
+  echo ""
+
   PODS=$(kubectl get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{": "}{.kind}{"/"}{.metadata.name}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded")
   POD_STATUSES=$(echo "${PODS}" | sed -E "s/(.*):.*/\1/g")
   if [[ -n "${POD_STATUSES}" ]]; then
