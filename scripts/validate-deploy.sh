@@ -19,7 +19,10 @@ if [[ -n "${VALIDATE_DEPLOY_SCRIPT}" ]] && [[ -f "${VALIDATE_DEPLOY_SCRIPT}" ]];
   echo "VALIDATE_DEPLOY_SCRIPT provided. Delegating validation logic to ${VALIDATE_DEPLOY_SCRIPT}"
   echo ""
 
-  ${VALIDATE_DEPLOY_SCRIPT} "${CLUSTER_TYPE}" "${NAMESPACE}" "${NAME}" "${CONSOLE_LINK_NAME}"
+  if ! ${VALIDATE_DEPLOY_SCRIPT} "${CLUSTER_TYPE}" "${NAMESPACE}" "${NAME}" "${CONSOLE_LINK_NAME}"; then
+    echo "Validation failed"
+    exit 1
+  fi
 else
   echo "No VALIDATE_DEPLOY_SCRIPT provided or script not found. Using default validation. (${VALIDATE_DEPLOY_SCRIPT})"
   echo ""
