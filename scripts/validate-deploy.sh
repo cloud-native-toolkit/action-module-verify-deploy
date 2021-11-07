@@ -42,9 +42,11 @@ else
   set -e
 
   if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" =~ iks.* ]]; then
-    ENDPOINTS=$(kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{"https://"}{.host}{"\n"}{end}{end}')
+    ENDPOINTS=$(kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{.host}{"\n"}{end}{end}')
   else
-    ENDPOINTS=$(kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{"https://"}{.spec.host}{.spec.path}{"\n"}{end}')
+    echo "Routes in namespace: ${NAMESPACE}"
+    kubectl get route -n "${NAMESPACE}"
+    ENDPOINTS=$(kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}')
   fi
 
   echo "Validating endpoints:"
@@ -52,7 +54,7 @@ else
 
   echo "${ENDPOINTS}" | while read endpoint; do
     if [[ -n "${endpoint}" ]]; then
-      ${SCRIPT_DIR}/waitForEndpoint.sh "${endpoint}" 10 10
+      ${SCRIPT_DIR}/waitForEndpoint.sh "https://${endpoint}" 10 10
     fi
   done
 
