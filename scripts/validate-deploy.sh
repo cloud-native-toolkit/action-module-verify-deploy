@@ -52,7 +52,7 @@ else
   echo "Validating endpoints:"
   echo "${ENDPOINTS}"
 
-  echo "${ENDPOINTS}" | while read endpoint; do
+  echo ${ENDPOINTS} | while read endpoint; do
     if [[ -n "${endpoint}" ]]; then
       ${SCRIPT_DIR}/waitForEndpoint.sh "https://${endpoint}" 10 10
     fi
