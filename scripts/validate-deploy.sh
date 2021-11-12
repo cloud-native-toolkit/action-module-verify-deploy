@@ -49,7 +49,7 @@ else
     ENDPOINTS=$(kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}')
   fi
 
-  echo "Validating endpoints:"
+  echo "Validating endpoint urls:"
   echo "${ENDPOINTS}"
 
   kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
