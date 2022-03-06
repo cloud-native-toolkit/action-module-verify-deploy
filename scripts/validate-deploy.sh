@@ -18,7 +18,7 @@ NAMESPACE="$2"
 CONSOLE_LINK_NAME="$3"
 VALIDATE_DEPLOY_SCRIPT="$4"
 
-KUBECTL=$(command -v "${BIN_DIR}/kubectl" || command -v kubectl)
+OC=$(command -v "${BIN_DIR}/oc" || command -v oc)
 
 if [[ -z "${NAME}" ]]; then
   NAME=$(echo "${NAMESPACE}" | sed "s/tools-//")
@@ -38,7 +38,12 @@ else
   echo "No VALIDATE_DEPLOY_SCRIPT provided or script not found. Using default validation. (${VALIDATE_DEPLOY_SCRIPT})"
   echo ""
 
-  PODS=$(${KUBECTL} get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{": "}{.kind}{"/"}{.metadata.name}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded")
+  if ! ${OC} get -n "${NAMESPACE}" pods 1> /dev/null 2> /dev/null; then
+    echo "  Error retrieving pods"
+    exit 1
+  fi
+
+  PODS=$(${OC} get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{": "}{.kind}{"/"}{.metadata.name}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded")
   POD_STATUSES=$(echo "${PODS}" | sed -E "s/(.*):.*/\1/g")
   if [[ -n "${POD_STATUSES}" ]]; then
     echo "  Pods have non-success statuses: ${PODS}"
@@ -48,17 +53,17 @@ else
   set -e
 
   if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" =~ iks.* ]]; then
-    ENDPOINTS=$(${KUBECTL} get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{.host}{"\n"}{end}{end}')
+    ENDPOINTS=$(${OC} get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{.host}{"\n"}{end}{end}')
   else
     echo "Routes in namespace: ${NAMESPACE}"
-    ${KUBECTL} get route -n "${NAMESPACE}"
-    ENDPOINTS=$(${KUBECTL} get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}')
+    ${OC} get route -n "${NAMESPACE}"
+    ENDPOINTS=$(${OC} get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}')
   fi
 
   echo "Validating endpoint urls:"
   echo "${ENDPOINTS}"
 
-  ${KUBECTL} get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
+  ${OC} get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
     if [[ -n "${endpoint}" ]]; then
       ${SCRIPT_DIR}/waitForEndpoint.sh "https://${endpoint}" 10 10
     fi
@@ -66,7 +71,7 @@ else
 
   if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
     echo "Validating consolelink"
-    if [[ $(${KUBECTL} get consolelink "${CONSOLE_LINK_NAME}" | wc -l) -eq 0 ]]; then
+    if [[ $(${OC} get consolelink "${CONSOLE_LINK_NAME}" | wc -l) -eq 0 ]]; then
       echo "   ConsoleLink not found"
       exit 1
     fi
