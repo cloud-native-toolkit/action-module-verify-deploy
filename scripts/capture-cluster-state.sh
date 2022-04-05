@@ -3,8 +3,11 @@
 SCRIPT_DIR=$(cd $(dirname "$0"); pwd -P)
 
 if [[ -f .bin_dir ]]; then
+  echo ".bin_dir found"
   BIN_DIR=$(cat .bin_dir)
   export PATH="${BIN_DIR}:${PATH}"
+else
+  echo ".bin_dir not found"
 fi
 
 export KUBECONFIG="${PWD}/.kube/config"
