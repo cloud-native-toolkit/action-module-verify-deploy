@@ -2,6 +2,11 @@
 
 SCRIPT_DIR=$(cd $(dirname "$0"); pwd -P)
 
+if [[ -f .bin_dir ]]; then
+  BIN_DIR=$(cat .bin_dir)
+  export PATH="${BIN_DIR}:${PATH}"
+fi
+
 export KUBECONFIG="${PWD}/.kube/config"
 
 PLATFORM="$1"
