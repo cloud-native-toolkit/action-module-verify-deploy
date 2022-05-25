@@ -49,6 +49,10 @@ runs:
 
         if curl -sL ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars 1> /dev/null; then
           curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
+          if [[ "$(cat terraform.tfvars") =~ 404: Not Found ]]; then
+            echo "Terraform config not found"
+            echo "" > terraform.tfvars
+          fi
         else
           echo "No terraform.tfvars file found"
           echo "" > terraform.tfvars
