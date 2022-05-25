@@ -47,7 +47,12 @@ runs:
 
         echo "++ Retrieving terraform.tfvars from ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars"
 
-        curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
+        if curl -sL ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars 1> /dev/null; then
+          curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
+        else
+          echo "No terraform.tfvars file found"
+          echo "" > terraform.tfvars
+        fi
         echo "namespace=\"${NAMESPACE}\"" >> terraform.tfvars
 
         echo "++ terraform.tfvars"
