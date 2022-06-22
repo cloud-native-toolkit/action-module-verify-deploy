@@ -78,6 +78,8 @@ runs:
         fi
 
         cd ${{ inputs.workspace }}
+        export REPO_NAME="${{ github.event.repository.name }}"
+        echo "Repository: $REPO_NAME"
         $GITHUB_ACTION_PATH/scripts/apply.sh || exit 1
         
         if [[ "${{ inputs.testPlan }}" == "true" ]]; then

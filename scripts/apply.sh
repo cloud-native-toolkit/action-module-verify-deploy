@@ -9,4 +9,10 @@ rm -rf "${SRC_DIR}/state"
 
 echo ""
 
-terraform init && terraform apply -auto-approve
+PARALELLISM=10
+if [[ "$REPO_NAME" == *"gitops"* ]]; then
+  PARALELLISM=3
+  echo "GitOps repo detected, using \"terraform -parallelism=$PARALELLISM\""
+fi
+
+terraform init && terraform apply -parallelism=$PARALELLISM -auto-approve
