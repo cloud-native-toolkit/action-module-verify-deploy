@@ -18,8 +18,15 @@ if [[ -n "$RESOURCE_LIST" ]]; then
   terraform plan -destroy ${RESOURCE_LIST} -out=destroy.plan
 
   echo ""
+
+  PARALELLISM=10
+  if [[ "$REPO_NAME" == *"gitops"* ]]; then
+    PARALELLISM=3
+    echo "GitOps repo detected, using \"terraform -parallelism=$PARALELLISM\""
+  fi
+
   echo "Destroying resources"
-  terraform apply -auto-approve destroy.plan
+  terraform apply -parallelism=$PARALELLISM -auto-approve destroy.plan
 else
   echo ""
   echo "Nothing to destroy!!"
