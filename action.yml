@@ -37,13 +37,12 @@ runs:
       run: |
         echo "*** Setup ${{ inputs.clusterId }} terraform.tfvars ***"
 
-        mkdir -p ${{ inputs.workspace }}/${{ inputs.testModuleDir }}
-        cp -R ${{ inputs.testStagesDir }}/* ${{ inputs.workspace }}
-        cp -R . ${{ inputs.workspace }}/${{ inputs.testModuleDir }}
+        path=$(echo "${{ inputs.testModuleDir }}" | sed -E "s~[^/]+~..~g")
+        cd "${{ inputs.testStagesDir }}"
+        
+        ln -s "${path}" ./module
 
         NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-//g")
-
-        cd ${{ inputs.workspace }}
 
         echo "++ Retrieving terraform.tfvars from ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars"
 
@@ -77,7 +76,7 @@ runs:
           source .env
         fi
 
-        cd ${{ inputs.workspace }}
+        cd "${{ inputs.testStagesDir }}"
         export REPO_NAME="${{ github.event.repository.name }}"
         echo "Repository: $REPO_NAME"
         $GITHUB_ACTION_PATH/scripts/apply.sh || exit 1
@@ -100,5 +99,5 @@ runs:
 
         ROOT_DIR="$PWD"
 
-        cd ${{ inputs.workspace }}
+        cd "${{ inputs.testStagesDir }}"
         $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }} "${CONSOLE_LINK_NAME}" "$ROOT_DIR/${{ inputs.validateDeployScript }}"
