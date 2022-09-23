@@ -10,7 +10,7 @@ inputs:
     default: ""
   testStagesDir:
     description: The directory where the test stages are located
-    default: test/stages
+    default: examples
     required: false
   testModuleDir:
     description: The directory where the current module will be copied
