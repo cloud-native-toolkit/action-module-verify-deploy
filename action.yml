@@ -1,8 +1,8 @@
 name: Verify terraform module
 description: "GitHub Action to run through the lifecycle for a terraform module: deploy, verify deploy, destroy, and verify destroy"
 inputs:
-  clusterId:
-    description: The identifier of the cluster onto which the module should be deployed
+  testcase:
+    description: The identifier of the test case that should be applied
     required: true
   validateDeployScript:
     description: Script to validate deployment environment
@@ -21,7 +21,7 @@ inputs:
     default: /tmp/workspace
     required: false
   configBaseUrl:
-    description: The base url where the terraform.tfvars file can be found for the clusterId. Expected to resolve to {configBaseUrl}/{clusterId}/terraform.tfvars
+    description: The base url where the terraform.tfvars file can be found for the test case. Expected to resolve to {configBaseUrl}/{testcase}/terraform.tfvars
     default: "https://raw.githubusercontent.com/ibm-garage-cloud/action-module-verify/main/env"
     required: false
   testPlan:
@@ -31,23 +31,21 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup ${{ inputs.clusterId }} terraform.tfvars
+    - name: Setup ${{ inputs.testcase }} terraform.tfvars
       id: setup-terraform
       shell: bash
       run: |
-        echo "*** Setup ${{ inputs.clusterId }} terraform.tfvars ***"
+        echo "*** Setup ${{ inputs.testcase }} terraform.tfvars ***"
 
         path=$(echo "${{ inputs.testModuleDir }}" | sed -E "s~[^/]+~..~g")
         cd "${{ inputs.testStagesDir }}"
-        
-        ln -s "${path}" ./module
 
         NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-//g")
 
-        echo "++ Retrieving terraform.tfvars from ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars"
+        echo "++ Retrieving terraform.tfvars from ${{ inputs.configBaseUrl }}/${{ inputs.testcase }}/terraform.tfvars"
 
-        if curl -sL ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars 1> /dev/null; then
-          curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.clusterId }}/terraform.tfvars
+        if curl -sL ${{ inputs.configBaseUrl }}/${{ inputs.testcase }}/terraform.tfvars 1> /dev/null; then
+          curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.testcase }}/terraform.tfvars
           
           TFVARS_CONTENT=$(cat terraform.tfvars)
           if [[ "${TFVARS_CONTENT}" == "404: Not Found" ]]; then
@@ -66,10 +64,10 @@ runs:
         echo "::set-output name=namespace::$NAMESPACE"
 
     # Deploy
-    - name: Deploy ${{ inputs.clusterId }}
+    - name: Deploy ${{ inputs.testcase }}
       shell: bash
       run: |
-        echo "*** Deploy ${{ inputs.clusterId }} ***"
+        echo "*** Deploy ${{ inputs.testcase }} ***"
 
         if [[ -f .env ]]; then
           echo "++ Loading config from .env file"
@@ -87,10 +85,10 @@ runs:
         fi
 
     # Test deploy
-    - name: Validate deploy ${{ inputs.clusterId }}
+    - name: Validate deploy ${{ inputs.testcase }}
       shell: bash
       run: |
-        echo "*** Validate deploy ${{ inputs.clusterId }} ***"
+        echo "*** Validate deploy ${{ inputs.testcase }} ***"
 
         if [[ -f .env ]]; then
           echo "++ Loading config from .env file"
@@ -100,4 +98,4 @@ runs:
         ROOT_DIR="$PWD"
 
         cd "${{ inputs.testStagesDir }}"
-        $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.clusterId }} ${{ steps.setup-terraform.outputs.namespace }} "${CONSOLE_LINK_NAME}" "$ROOT_DIR/${{ inputs.validateDeployScript }}"
+        $GITHUB_ACTION_PATH/scripts/validate-deploy.sh ${{ inputs.testcase }} ${{ steps.setup-terraform.outputs.namespace }} "${CONSOLE_LINK_NAME}" "$ROOT_DIR/${{ inputs.validateDeployScript }}"
