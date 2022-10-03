@@ -69,6 +69,8 @@ runs:
     # Deploy
     - name: Deploy ${{ inputs.clusterId }}
       shell: bash
+      env:
+        TF_LOG_PROVIDER_gitops: DEBUG      
       run: |
         echo "*** Deploy ${{ inputs.clusterId }} ***"
 
@@ -90,6 +92,8 @@ runs:
     # Test deploy
     - name: Validate deploy ${{ inputs.clusterId }}
       shell: bash
+      env:
+        TF_LOG_PROVIDER_gitops: DEBUG      
       run: |
         echo "*** Validate deploy ${{ inputs.clusterId }} ***"
 
