@@ -15,4 +15,8 @@ if [[ "$REPO_NAME" == *"gitops"* ]]; then
   echo "GitOps repo detected, using \"terraform -parallelism=$PARALELLISM\""
 fi
 
-terraform init && terraform apply -parallelism=$PARALELLISM -auto-approve
+if [[ -f terragrunt.hcl ]]; then
+  terragrunt run-all apply --terragrunt-parallelism 1 --terragrunt-non-interactive
+else
+  terraform init && terraform apply -parallelism=$PARALELLISM -auto-approve
+fi

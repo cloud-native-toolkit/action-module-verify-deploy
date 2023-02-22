@@ -1,5 +1,11 @@
 #! /bin/bash
 
+if [[ -f terragrunt.hcl ]]; then
+  terragrunt run-all destroy --terragrunt-parallelism 1 --terragrunt-non-interactive --terragrunt-ignore-dependency-errors
+  
+  exit 1
+fi
+
 echo ""
 echo "Listing current state"
 terraform state list
