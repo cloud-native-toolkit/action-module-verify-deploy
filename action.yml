@@ -12,10 +12,6 @@ inputs:
     description: The directory where the test stages are located
     default: examples
     required: false
-  testModuleDir:
-    description: The directory where the current module will be copied
-    default: module
-    required: false
   workspace:
     description: The directory where the terraform workspace should be created
     default: /tmp/workspace
@@ -37,7 +33,6 @@ runs:
       run: |
         echo "*** Setup ${{ inputs.testcase }} terraform.tfvars ***"
 
-        path=$(echo "${{ inputs.testModuleDir }}" | sed -E "s~[^/]+~..~g")
         cd "${{ inputs.testStagesDir }}"
 
         NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-//g")
@@ -61,7 +56,7 @@ runs:
         echo "++ terraform.tfvars"
         cat terraform.tfvars
 
-        echo "::set-output name=namespace::$NAMESPACE"
+        echo "namespace=$NAMESPACE" >> $GITHUB_OUTPUT
 
     # Deploy
     - name: Deploy ${{ inputs.testcase }}
