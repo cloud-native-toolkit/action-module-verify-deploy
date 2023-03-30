@@ -33,6 +33,7 @@ runs:
       run: |
         echo "*** Setup ${{ inputs.testcase }} terraform.tfvars ***"
 
+        chmod 777 "${{ inputs.testStagesDir }}"
         cd "${{ inputs.testStagesDir }}"
 
         NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-//g")
