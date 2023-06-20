@@ -36,21 +36,29 @@ runs:
         cd "${{ inputs.testStagesDir }}"
 
         NAMESPACE=$(echo "${GITHUB_REPOSITORY}" | sed -E "s~.*/~~g" | sed -E "s/terraform-//g")
-
-        echo "++ Retrieving terraform.tfvars from ${{ inputs.configBaseUrl }}/${{ inputs.testcase }}/terraform.tfvars"
-
-        if curl -sL ${{ inputs.configBaseUrl }}/${{ inputs.testcase }}/terraform.tfvars 1> /dev/null; then
-          curl -Lo terraform.tfvars ${{ inputs.configBaseUrl }}/${{ inputs.testcase }}/terraform.tfvars
-          
-          TFVARS_CONTENT=$(cat terraform.tfvars)
-          if [[ "${TFVARS_CONTENT}" == "404: Not Found" ]]; then
-            echo "Terraform config not found"
-            echo "" > terraform.tfvars
+        
+        TESTCASES="${{ inputs.testcase }}"
+        
+        echo "" > terraform.tfvars
+        
+        IFS=","
+        for testcase in "${TESTCASES[@]}"; do
+          echo "++ Retrieving terraform.tfvars from ${{ inputs.configBaseUrl }}/${testcase}/terraform.tfvars"
+        
+          if curl -sL ${{ inputs.configBaseUrl }}/${testcase}/terraform.tfvars 1> /dev/null; then
+            curl -Lo terraform.${testcase}.tfvars ${{ inputs.configBaseUrl }}/${testcase}/terraform.tfvars
+            
+            TFVARS_CONTENT=$(cat terraform.${testcase}.tfvars)
+            if [[ "${TFVARS_CONTENT}" == "404: Not Found" ]]; then
+              echo "  Terraform config not found for testcase ${testcase}"
+            else
+              cat terraform.${testcase}.tfvars >> terraform.tfvars
+            fi
+          else
+            echo "  No terraform.tfvars file found for testcase "${testcase}"
           fi
-        else
-          echo "No terraform.tfvars file found"
-          echo "" > terraform.tfvars
-        fi
+        done
+        
         echo "namespace=\"${NAMESPACE}\"" >> terraform.tfvars
 
         echo "++ terraform.tfvars"
